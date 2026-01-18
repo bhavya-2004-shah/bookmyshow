@@ -1,0 +1,189 @@
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+
+const BASE_URL =
+  "http://ec2-13-201-98-117.ap-south-1.compute.amazonaws.com:3000";
+
+const MovieShows = () => {
+  const { id: movieId } = useParams();
+
+  const [movie, setMovie] = useState(null);
+  const [theatres, setTheatres] = useState([]);
+  const [selectedTheatre, setSelectedTheatre] = useState(null);
+  const [shows, setShows] = useState([]);
+
+  const [availableDates, setAvailableDates] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const token =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlhc2hAaGV4YWNvZGVyLmNvbSIsImlkIjoiZmZlZmFkMjUtNDY2ZS00YjNiLWI3MjYtNDAxYmQ3YmZlNjQ1IiwiaWF0IjoxNzY4NTQwMjA3LCJleHAiOjE3NjkxNDUwMDd9.DrrnYd2BXRE00q5p5fansxf4FvlfIPjwJJKnh3RVMqU";
+
+  const axiosConfig = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+
+  // 1️⃣ Fetch movie + theatres
+  useEffect(() => {
+    const fetchMovie = async () => {
+      try {
+        const res = await axios.get(
+          `${BASE_URL}/movies/${movieId}`,
+          axiosConfig
+        );
+
+        setMovie(res.data);
+        setTheatres(res.data.theaters || []);
+      } catch (err) {
+        console.error("Error fetching movie", err);
+      }
+    };
+
+    if (movieId && token) {
+      fetchMovie();
+    }
+  }, [movieId]);
+
+  // 2️⃣ Fetch screens → showTimes → filter by movie
+  useEffect(() => {
+    if (!selectedTheatre) return;
+
+    const fetchShows = async () => {
+      try {
+        const screenRes = await axios.get(
+          `${BASE_URL}/theaters/${selectedTheatre.id}/screens`,
+          axiosConfig
+        );
+
+        const screens = screenRes.data;
+        let movieShows = [];
+
+        for (const screen of screens) {
+          const screenDetails = await axios.get(
+            `${BASE_URL}/screens/${screen.id}`,
+            axiosConfig
+          );
+
+          const showTimes =
+            screenDetails.data.data.screen.showTimes || [];
+
+          const filteredShows = showTimes.filter(
+            (show) => show.movieId === movieId
+          );
+
+          movieShows.push(
+            ...filteredShows.map((show) => ({
+              ...show,
+              screenNumber:
+                screenDetails.data.data.screen.screenNumber,
+            }))
+          );
+        }
+
+        setShows(movieShows);
+
+        // ✅ SORT + LIMIT DATES (ASCENDING, FIRST 5)
+        const uniqueSortedDates = [
+          ...new Set(
+            movieShows.map((show) =>
+              new Date(show.startTime).toISOString().split("T")[0]
+            )
+          ),
+        ]
+          .sort((a, b) => new Date(a) - new Date(b))
+          .slice(0, 5);
+
+        setAvailableDates(uniqueSortedDates);
+        setSelectedDate(uniqueSortedDates[0] || null);
+      } catch (err) {
+        console.error("Error fetching shows", err);
+      }
+    };
+
+    fetchShows();
+  }, [selectedTheatre]);
+
+  // 3️⃣ Filter shows by selected date
+  const filteredShows = selectedDate
+    ? shows.filter(
+        (show) =>
+          new Date(show.startTime).toISOString().split("T")[0] ===
+          selectedDate
+      )
+    : [];
+
+  return (
+    <div style={{ padding: "20px" }}>
+      {movie && (
+        <>
+          <h2>{movie.name}</h2>
+          <p>{movie.description}</p>
+        </>
+      )}
+
+      <h3>Select Theatre</h3>
+      {theatres.map((theatre) => (
+        <button
+          key={theatre.id}
+          onClick={() => {
+            setSelectedTheatre(theatre);
+            setShows([]);
+            setAvailableDates([]);
+            setSelectedDate(null);
+          }}
+          style={{ display: "block", marginBottom: "10px" }}
+        >
+          {theatre.name}
+        </button>
+      ))}
+
+      {/* ✅ DATE SELECTION */}
+      {availableDates.length > 0 && (
+        <>
+          <h3>Select Date</h3>
+          <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+            {availableDates.map((date) => (
+              <button
+                key={date}
+                onClick={() => setSelectedDate(date)}
+                style={{
+                  padding: "6px 12px",
+                  border:
+                    selectedDate === date
+                      ? "2px solid black"
+                      : "1px solid gray",
+                  background:
+                    selectedDate === date ? "#ddd" : "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                {new Date(date).toDateString()}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ✅ SHOW TIMINGS */}
+      {filteredShows.length > 0 && (
+        <>
+          <h3>Show Timings</h3>
+          {filteredShows.map((show) => (
+            <div key={show.id} style={{ marginBottom: "8px" }}>
+              Screen {show.screenNumber} —{" "}
+              {new Date(show.startTime).toLocaleTimeString()}
+            </div>
+          ))}
+        </>
+      )}
+
+      {selectedTheatre && filteredShows.length === 0 && (
+        <p>No shows available for this date.</p>
+      )}
+    </div>
+  );
+};
+
+export default MovieShows;
