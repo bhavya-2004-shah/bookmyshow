@@ -33,6 +33,7 @@ const MovieShows = () => {
           `${BASE_URL}/movies/${movieId}`,
           axiosConfig
         );
+
         setMovie(movieRes.data);
 
         const theatres = movieRes.data.theaters || [];
@@ -68,7 +69,7 @@ const MovieShows = () => {
           const showTimes = res.data.data.screen.showTimes || [];
 
           showTimes
-            .filter((s) => s.movieId === movieId)
+            .filter((s) => String(s.movieId) === String(movieId)) // 🔥 FIXED
             .forEach((s) => {
               allShows.push({
                 ...s,
@@ -107,7 +108,7 @@ const MovieShows = () => {
     fetchData();
   }, [movieId]);
 
-  // 🔥 NEW LOGIC: show ALL theatres from movie API
+  // 🎬 SHOW ALL THEATRES FROM MOVIE API
   useEffect(() => {
     if (!movie) return;
 
