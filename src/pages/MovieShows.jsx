@@ -67,16 +67,16 @@ const MovieShows = () => {
           const screen = screens[i];
           const showTimes = res.data.data.screen.showTimes || [];
 
-        showTimes
-  .filter((s) => String(s.movieId) === String(movieId))
-  .forEach((s) => {
-    allShows.push({
-      ...s,
-      theatreId: screen.theatreId,
-      theatreName: screen.theatreName,
-      screenNumber: res.data.data.screen.screenNumber,
-    });
-  });
+          showTimes
+            .filter((s) => s.movieId === movieId)
+            .forEach((s) => {
+              allShows.push({
+                ...s,
+                theatreId: screen.theatreId,
+                theatreName: screen.theatreName,
+                screenNumber: res.data.data.screen.screenNumber,
+              });
+            });
         });
 
         setShows(allShows);
@@ -85,7 +85,7 @@ const MovieShows = () => {
         today.setHours(0, 0, 0, 0);
 
         const lastAllowed = new Date(today);
-        lastAllowed.setDate(today.getDate() + 6); // only 7 days including today
+        lastAllowed.setDate(today.getDate() + 6);
 
         const filteredDates = [
           ...new Set(
@@ -107,27 +107,19 @@ const MovieShows = () => {
     fetchData();
   }, [movieId]);
 
+  // 🔥 NEW LOGIC: show ALL theatres from movie API
   useEffect(() => {
-    if (!selectedDate) return;
+    if (!movie) return;
 
-    const theatres = [
-      ...new Map(
-        shows
-          .filter(
-            (s) =>
-              new Date(s.startTime).toISOString().split("T")[0] === selectedDate
-          )
-          .map((s) => [
-            s.theatreId,
-            { theatreId: s.theatreId, theatreName: s.theatreName },
-          ])
-      ).values(),
-    ];
+    const theatres = (movie.theaters || []).map((t) => ({
+      theatreId: t.id,
+      theatreName: t.name,
+    }));
 
     setAvailableTheatres(theatres);
     setSelectedTheatre(theatres[0] || null);
     setSelectedShow(null);
-  }, [selectedDate, shows]);
+  }, [movie]);
 
   const timesByTheatre = useMemo(() => {
     if (!selectedTheatre || !selectedDate) return [];
@@ -139,11 +131,9 @@ const MovieShows = () => {
     );
   }, [selectedTheatre, selectedDate, shows]);
 
-  // 🎯 Format date label
   const getDateLabel = (dateStr) => {
     const date = new Date(dateStr);
     const today = new Date();
-
     today.setHours(0, 0, 0, 0);
 
     const diff = Math.floor((date - today) / (1000 * 60 * 60 * 24));
@@ -161,13 +151,11 @@ const MovieShows = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-white to-blue-100 flex px-8 py-6 gap-10">
 
-      {/* LEFT */}
       <div className="flex-1 space-y-10">
         <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-sky-600">
           ← Back
         </button>
 
-        {/* DATE */}
         <div>
           <h2 className="text-blue-700 font-semibold text-lg mb-3">Date</h2>
           <div className="flex gap-3 overflow-x-auto">
@@ -175,10 +163,11 @@ const MovieShows = () => {
               <button
                 key={d}
                 onClick={() => setSelectedDate(d)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${selectedDate === d
+                className={`px-4 py-2 rounded-xl text-sm font-medium border ${
+                  selectedDate === d
                     ? "bg-blue-600 text-white border-blue-600 shadow"
                     : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
-                  }`}
+                }`}
               >
                 {getDateLabel(d)}
               </button>
@@ -186,7 +175,6 @@ const MovieShows = () => {
           </div>
         </div>
 
-        {/* THEATRE */}
         {availableTheatres.length > 0 && (
           <div>
             <h2 className="text-blue-700 font-semibold text-lg mb-3">Theater</h2>
@@ -198,10 +186,11 @@ const MovieShows = () => {
                     setSelectedTheatre(t);
                     setSelectedShow(null);
                   }}
-                  className={`px-3 py-2 rounded-lg border ${selectedTheatre?.theatreId === t.theatreId
+                  className={`px-3 py-2 rounded-lg border ${
+                    selectedTheatre?.theatreId === t.theatreId
                       ? "bg-blue-600 text-white"
                       : "bg-white hover:bg-blue-50"
-                    }`}
+                  }`}
                 >
                   {t.theatreName}
                 </button>
@@ -210,7 +199,6 @@ const MovieShows = () => {
           </div>
         )}
 
-        {/* TIME */}
         {timesByTheatre.length > 0 && (
           <div>
             <h2 className="text-blue-700 font-semibold text-lg mb-3">Time</h2>
@@ -219,10 +207,11 @@ const MovieShows = () => {
                 <button
                   key={s.id}
                   onClick={() => setSelectedShow(s)}
-                  className={`px-3 py-2 rounded-lg border ${selectedShow?.id === s.id
+                  className={`px-3 py-2 rounded-lg border ${
+                    selectedShow?.id === s.id
                       ? "bg-blue-600 text-white"
                       : "bg-white hover:bg-blue-50"
-                    }`}
+                  }`}
                 >
                   {new Date(s.startTime).toLocaleTimeString("en-IN", {
                     hour: "2-digit",
@@ -235,12 +224,12 @@ const MovieShows = () => {
         )}
       </div>
 
-      {/* RIGHT */}
       <div className="w-[340px] h-[500px] bg-white rounded-2xl shadow-lg p-6 space-y-5">
         {movie && (
           <>
             <img src={movie.image} alt={movie.name} className="rounded-xl w-full h-[220px] object-cover" />
-            <h2 className="text-blue-700 font-bold text-lg">{movie.name}</h2> <p>Dscription: {movie.description || "2h 30m"}</p> <div className="text-gray-600 font-bold text-sm space-y-1"> <p>Duration: {movie.duration || "2h 30m"}</p> <p>Rating: {movie.rating || "9/10"}</p> <p>Genre: {movie.genre || "Action"}</p> </div> </>
+            <h2 className="text-blue-700 font-bold text-lg">{movie.name}</h2>
+          </>
         )}
 
         {selectedDate && selectedTheatre && selectedShow && (
