@@ -3,8 +3,7 @@ import axios from "axios";
 import TicketCard from "./TicketCard";
 import { useNavigate } from "react-router-dom";
 
-const BASE_URL =
-  "http://ec2-13-201-98-117.ap-south-1.compute.amazonaws.com:3000";
+const BASE_URL = "/api";
 
 const MyTickets = () => {
   const navigate = useNavigate();
@@ -56,22 +55,20 @@ const MyTickets = () => {
       <div className="flex gap-4 mb-6">
         <button
           onClick={() => setActiveTab("upcoming")}
-          className={`px-4 py-2 rounded-lg border ${
-            activeTab === "upcoming"
+          className={`px-4 py-2 rounded-lg border ${activeTab === "upcoming"
               ? "bg-blue-500 text-white"
               : "border-blue-500 text-blue-500"
-          }`}
+            }`}
         >
           Upcoming
         </button>
 
         <button
           onClick={() => setActiveTab("history")}
-          className={`px-4 py-2 rounded-lg border ${
-            activeTab === "history"
+          className={`px-4 py-2 rounded-lg border ${activeTab === "history"
               ? "bg-blue-500 text-white"
               : "border-blue-500 text-blue-500"
-          }`}
+            }`}
         >
           History
         </button>

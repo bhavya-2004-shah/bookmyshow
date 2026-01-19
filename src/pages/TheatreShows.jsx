@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
-const BASE_URL =
-  "http://ec2-13-201-98-117.ap-south-1.compute.amazonaws.com:3000";
+const BASE_URL = "/api";
 
 const TheatreShows = () => {
   const { id: theaterId } = useParams();
@@ -14,22 +13,27 @@ const TheatreShows = () => {
   const [selectedShow, setSelectedShow] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
   const [allDates, setAllDates] = useState([]);
+  const [theater, setTheater] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
+
     fetchMovies(token);
     fetchScreensAndShows(token);
   }, []);
 
-  // 🎬 Fetch Movies for Theatre
+  // 🎭 Fetch theatre details + movies
   const fetchMovies = async (token) => {
     try {
       const res = await axios.get(`${BASE_URL}/theaters/${theaterId}/movies`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const movies = res.data?.data?.movies || [];
+      const data = res.data?.data;
+      setTheater(data);
+
+      const movies = data?.movies || [];
       const map = {};
       movies.forEach((m) => (map[m.id] = m.name));
       setMovieNames(map);
@@ -38,7 +42,7 @@ const TheatreShows = () => {
     }
   };
 
-  // 🎥 Fetch Screens & Showtimes
+  // 🎥 Fetch screens + filter showtimes for next 7 days
   const fetchScreensAndShows = async (token) => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -52,26 +56,34 @@ const TheatreShows = () => {
       let groupedMovies = {};
       let collectedDates = [];
 
+      const today = new Date();
+      const next7Days = new Date();
+      next7Days.setDate(today.getDate() + 7);
+
       for (let screen of screens) {
         const res = await axios.get(`${BASE_URL}/screens/${screen.id}`, config);
         const showTimes = res.data?.data?.screen?.showTimes || [];
 
         showTimes.forEach((show) => {
-          const formattedDate = new Date(show.startTime).toLocaleDateString(
-            "en-IN",
-            { day: "numeric", month: "short" }
-          );
+          const showDate = new Date(show.startTime);
 
-          collectedDates.push(formattedDate);
+          if (showDate >= today && showDate <= next7Days) {
+            const formattedDate = showDate.toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+            });
 
-          if (!groupedMovies[show.movieId]) {
-            groupedMovies[show.movieId] = {
-              movieId: show.movieId,
-              showTimes: [],
-            };
+            collectedDates.push(formattedDate);
+
+            if (!groupedMovies[show.movieId]) {
+              groupedMovies[show.movieId] = {
+                movieId: show.movieId,
+                showTimes: [],
+              };
+            }
+
+            groupedMovies[show.movieId].showTimes.push(show);
           }
-
-          groupedMovies[show.movieId].showTimes.push(show);
         });
       }
 
@@ -89,27 +101,54 @@ const TheatreShows = () => {
   };
 
   return (
-    <div className="p-6 bg-blue-50">
-   
+    <div className="min-h-screen bg-gradient-to-br from-white to-sky-100 p-6">
 
-      <div className="flex gap-3 flex-wrap mb-6">
-        {allDates.map((date) => (
+      {/* 🎭 Theatre Header */}
+      {theater && (
+        <div className="mb-6">
           <button
-            key={date}
-            onClick={() => {
-              setSelectedDate(date);
-              setSelectedShow(null);
-            }}
-            className={`px-3 py-1 border rounded ${
-              selectedDate === date ? "bg-blue-600 text-white" : "bg-white-200"
-            }`}
+            onClick={() => navigate(-1)}
+            className="text-gray-500 hover:text-blue-600 mb-2"
           >
-            {date}
+            ← Back
           </button>
-        ))}
+
+          <h1 className="text-2xl font-bold text-blue-700">{theater.name}</h1>
+          <p className="text-sm text-gray-600">📍 {theater.location}</p>
+        </div>
+      )}
+
+      {/* 📅 Date Selector */}
+      <div className="flex gap-3 overflow-x-auto pb-2 mb-8 scrollbar-hide">
+        {allDates.map((date) => {
+          const fullDate = new Date(
+            new Date().getFullYear(),
+            new Date().getMonth(),
+            parseInt(date)
+          );
+
+          const day = fullDate.toLocaleDateString("en-IN", { weekday: "short" });
+
+          return (
+            <button
+              key={date}
+              onClick={() => {
+                setSelectedDate(date);
+                setSelectedShow(null);
+              }}
+              className={`min-w-[90px] px-3 py-2 rounded-lg border text-center transition ${selectedDate === date
+                  ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                  : "bg-white text-gray-700 hover:bg-blue-500 border-gray-300"
+                }`}
+            >
+              <div className="text-xs font-semibold">{day}</div>
+              <div className="text-sm">{date}</div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* 🎬 Movies */}
+      {/* 🎬 Movies + Shows */}
       {Object.values(moviesMap).map((movie) => {
         const filteredShows = movie.showTimes.filter(
           (show) =>
@@ -124,10 +163,10 @@ const TheatreShows = () => {
         return (
           <div
             key={movie.movieId}
-            className="border-t pt-4 pb-6 mb-6 flex justify-between items-center"
+            className="bg-white rounded-xl p-5 mb-6 shadow flex justify-between items-center"
           >
             <div>
-              <h2 className="text-lg  text-blue-600">
+              <h2 className="text-lg font-semibold text-blue-700">
                 {movieNames[movie.movieId] || "Loading Movie..."}
               </h2>
 
@@ -136,11 +175,10 @@ const TheatreShows = () => {
                   <button
                     key={show.id}
                     onClick={() => setSelectedShow(show)}
-                    className={`px-3 py-1 rounded border ${
-                      selectedShow?.id === show.id
-                        ? "bg-blue-600 text-white"
-                        : "bg-white-400 hover:bg-blue-600"
-                    }`}
+                    className={`px-4 py-2 rounded-lg border ${selectedShow?.id === show.id
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white hover:bg-blue-500 border-gray-300"
+                      }`}
                   >
                     {new Date(show.startTime).toLocaleTimeString("en-IN", {
                       hour: "2-digit",
@@ -154,7 +192,7 @@ const TheatreShows = () => {
             <button
               onClick={() => navigate(`/seat-booking/${selectedShow?.id}`)}
               disabled={!selectedShow}
-              className="border border-blue-600 text-blue-600 px-6 py-2 rounded-lg hover:bg-blue-600 hover:text-white"
+              className="border border-blue-600 text-blue-600 px-6 py-2 rounded-lg hover:bg-blue-600 hover:text-white disabled:opacity-100"
             >
               Book Now
             </button>

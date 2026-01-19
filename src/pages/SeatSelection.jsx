@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const BASE_URL =
-  "http://ec2-13-201-98-117.ap-south-1.compute.amazonaws.com:3000";
+const BASE_URL = "/api";
 
 const SeatSelection = () => {
   const { showTimeId, seats } = useParams();
@@ -79,10 +78,10 @@ const SeatSelection = () => {
   if (!layoutData.length) return <div className="text-center mt-10">Loading seats...</div>;
 
   return (
-    <div className="min-h-screen bg-sky-100 flex flex-col items-center">
+    <div className="min-h-screen bg-blue-100 flex flex-col items-center px-70 ">
 
       {/* SEAT MAP */}
-      <div className="bg-white mt-10 p-8 rounded-2xl shadow-md w-full max-w-5xl">
+      <div className="bg-blue-100 mt-10 p-8 rounded-2xl  w-full ">
         {layoutData.map((section, idx) => {
           const { type, layout } = section;
           const [start, end] = layout.columns;
@@ -107,10 +106,10 @@ const SeatSelection = () => {
                       <div
                         key={seatId}
                         onClick={() => handleSeatClick(seatId, type)}
-                        className={`w-9 h-7 flex items-center justify-center text-xs rounded border cursor-pointer
+                        className={`w-9 h-7 flex items-center justify-center text-xs rounded border m-2 border-gray-300 cursor-pointer
                           ${isBooked ? "bg-gray-300 text-gray-500 cursor-not-allowed" :
-                          isSelected ? "bg-blue-500 text-white border-blue-500" :
-                          "hover:border-blue-500"}`}
+                            isSelected ? "bg-blue-500 text-white border-blue-500" :
+                              "hover:border-blue-500"}`}
                       >
                         {seatId}
                       </div>
@@ -122,7 +121,7 @@ const SeatSelection = () => {
           );
         })}
 
-        
+
         <div className="mt-6">
           <div className="h-2 bg-gray-300 rounded-full"></div>
           <p className="text-center text-gray-500 text-sm mt-1">
@@ -131,22 +130,22 @@ const SeatSelection = () => {
         </div>
       </div>
 
-     
+
       <button
-  className="mt-8 mb-12 px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold"
-  onClick={() =>
-    navigate(`/confirmation/${showTimeId}`, {
-      state: {
-        showId: showTimeId,
-        bookedSeats: selectedSeats,
-        totalPrice: totalAmount,
-        priceMap,
-      },
-    })
-  }
->
-  Pay ₹{totalAmount}
-</button>
+        className="mt-8 mb-12 px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold"
+        onClick={() =>
+          navigate(`/confirmation/${showTimeId}`, {
+            state: {
+              showId: showTimeId,
+              bookedSeats: selectedSeats,
+              totalPrice: totalAmount,
+              priceMap,
+            },
+          })
+        }
+      >
+        Pay ₹{totalAmount}
+      </button>
     </div>
   );
 };

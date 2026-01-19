@@ -11,7 +11,7 @@ const Movie = () => {
 
   const [movieNames, setMovieNames] = useState([]);
 
-  // 🔐 Redirect if not logged in or token expired
+
   useEffect(() => {
     if (!token || (expireAt && Date.now() / 1000 > Number(expireAt))) {
       localStorage.clear();
@@ -24,7 +24,7 @@ const Movie = () => {
     const fetchMovieNames = async () => {
       try {
         const response = await axios.get(
-          "http://ec2-13-201-98-117.ap-south-1.compute.amazonaws.com:3000/movies",
+          "/api/movies",
           {
             headers: {
               Authorization: `Bearer ${token}`,

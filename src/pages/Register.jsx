@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import logo from "../assets/logo.png";
 
-const BASE_URL = "http://ec2-13-201-98-117.ap-south-1.compute.amazonaws.com:3000";
+const BASE_URL = "/api";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ const Register = () => {
         {/* LEFT */}
         <div className="w-1/2 bg-gradient-to-b from-blue-200 to-blue-50 p-10 flex flex-col justify-between">
           <img src={logo} alt="Logo" className="w-20 h-20" />
-         <div className="text-gray-700 italic text-3xl leading-10">
+          <div className="text-gray-700 italic text-3xl leading-10">
             Welcome.
             <br />
             Begin your cinematic
@@ -68,7 +68,7 @@ const Register = () => {
             <br />
             ticketing platform!
           </div>
-   
+
         </div>
 
         {/* RIGHT */}
@@ -79,7 +79,7 @@ const Register = () => {
               Create an account
             </h2>
 
-            <form className="space-y-4" autoComplete="off"onSubmit={handleSignup}>
+            <form className="space-y-4" autoComplete="off" onSubmit={handleSignup}>
 
               <div>
                 <label>First Name</label>
@@ -96,7 +96,7 @@ const Register = () => {
               <div>
                 <label>Last Name</label>
                 <input
-                autoComplete="off"
+                  autoComplete="off"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
@@ -108,7 +108,7 @@ const Register = () => {
               <div>
                 <label>Email</label>
                 <input
-                autoComplete="off"
+                  autoComplete="off"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
@@ -120,7 +120,7 @@ const Register = () => {
               <div>
                 <label>Password</label>
                 <input
-                autoComplete="off"
+                  autoComplete="off"
                   type="password"
                   name="password"
                   value={formData.password}

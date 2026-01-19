@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 
-const BASE_URL =
-  "http://ec2-13-201-98-117.ap-south-1.compute.amazonaws.com:3000";
+const BASE_URL = "/api";
 
 const Confirmation = () => {
   const { showTimeId } = useParams();
@@ -84,7 +83,7 @@ const Confirmation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-sky-100 flex justify-center py-10">
+    <div className="min-h-screen  bg-sky-100 flex justify-center py-10">
 
       <div className="w-[360px] bg-white border-2 border-blue-400 rounded-2xl shadow-lg p-6">
 

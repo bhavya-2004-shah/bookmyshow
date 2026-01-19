@@ -4,8 +4,7 @@ import axios from "axios";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
-const BASE_URL =
-  "http://ec2-13-201-98-117.ap-south-1.compute.amazonaws.com:3000";
+const BASE_URL = "/api";
 
 const Tickets = () => {
   const { orderId } = useParams();
@@ -106,7 +105,7 @@ const Tickets = () => {
       pdf.addImage(imgData, "PNG", 15, 15, imgWidth, imgHeight);
       pdf.save("ticket.pdf");
 
-      
+
 
     } catch (err) {
       console.error("❌ PDF generation failed:", err);

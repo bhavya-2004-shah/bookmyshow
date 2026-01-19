@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const BASE_URL =
-  "http://ec2-13-201-98-117.ap-south-1.compute.amazonaws.com:3000";
+const BASE_URL = "/api";
 
 const MovieShows = () => {
   const navigate = useNavigate();
@@ -25,15 +24,15 @@ const MovieShows = () => {
   const [availableDates, setAvailableDates] = useState([]);
   const [availableTheatres, setAvailableTheatres] = useState([]);
 
-  // ===============================
-  // FETCH DATA (FAST)
-  // ===============================
   useEffect(() => {
     if (!token) return;
 
     const fetchData = async () => {
       try {
-        const movieRes = await axios.get(`${BASE_URL}/movies/${movieId}`, axiosConfig);
+        const movieRes = await axios.get(
+          `${BASE_URL}/movies/${movieId}`,
+          axiosConfig
+        );
         setMovie(movieRes.data);
 
         const theatres = movieRes.data.theaters || [];
@@ -48,7 +47,11 @@ const MovieShows = () => {
         screensRes.forEach((res, i) => {
           const theatre = theatres[i];
           res.data.forEach((s) => {
-            screens.push({ ...s, theatreId: theatre.id, theatreName: theatre.name });
+            screens.push({
+              ...s,
+              theatreId: theatre.id,
+              theatreName: theatre.name,
+            });
           });
         });
 
@@ -78,16 +81,23 @@ const MovieShows = () => {
 
         setShows(allShows);
 
-        const dates = [
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const lastAllowed = new Date(today);
+        lastAllowed.setDate(today.getDate() + 6); // only 7 days including today
+
+        const filteredDates = [
           ...new Set(
-            allShows.map((s) =>
-              new Date(s.startTime).toISOString().split("T")[0]
-            )
+            allShows
+              .map((s) => new Date(s.startTime))
+              .filter((d) => d >= today && d <= lastAllowed)
+              .map((d) => d.toISOString().split("T")[0])
           ),
         ].sort((a, b) => new Date(a) - new Date(b));
 
-        setAvailableDates(dates);
-        setSelectedDate(dates[0] || null);
+        setAvailableDates(filteredDates);
+        setSelectedDate(filteredDates[0] || null);
 
       } catch (err) {
         console.error("Error loading movie shows:", err);
@@ -97,9 +107,6 @@ const MovieShows = () => {
     fetchData();
   }, [movieId]);
 
-  // ===============================
-  // FILTER THEATRES BY DATE
-  // ===============================
   useEffect(() => {
     if (!selectedDate) return;
 
@@ -120,12 +127,8 @@ const MovieShows = () => {
     setAvailableTheatres(theatres);
     setSelectedTheatre(theatres[0] || null);
     setSelectedShow(null);
-
   }, [selectedDate, shows]);
 
-  // ===============================
-  // FILTER TIMES BY THEATRE + DATE
-  // ===============================
   const timesByTheatre = useMemo(() => {
     if (!selectedTheatre || !selectedDate) return [];
 
@@ -136,29 +139,48 @@ const MovieShows = () => {
     );
   }, [selectedTheatre, selectedDate, shows]);
 
-  return (
-    <div className="min-h-screen bg-blue-50 p-8 flex gap-10">
+  // 🎯 Format date label
+  const getDateLabel = (dateStr) => {
+    const date = new Date(dateStr);
+    const today = new Date();
 
-      {/* LEFT SECTION */}
-      <div className="flex-1 space-y-8">
+    today.setHours(0, 0, 0, 0);
+
+    const diff = Math.floor((date - today) / (1000 * 60 * 60 * 24));
+
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Tomorrow";
+
+    return date.toLocaleDateString("en-IN", {
+      weekday: "short",
+      day: "2-digit",
+      month: "short",
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-white via-white to-blue-100 flex px-8 py-6 gap-10">
+
+      {/* LEFT */}
+      <div className="flex-1 space-y-10">
+        <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-sky-600">
+          ← Back
+        </button>
 
         {/* DATE */}
         <div>
-          <h2 className="text-xl mb-3 text-blue-700">Date</h2>
-          <div className="flex gap-3 flex-wrap">
+          <h2 className="text-blue-700 font-semibold text-lg mb-3">Date</h2>
+          <div className="flex gap-3 overflow-x-auto">
             {availableDates.map((d) => (
               <button
                 key={d}
                 onClick={() => setSelectedDate(d)}
-                className={`px-4 py-2 rounded-lg border ${
-                  selectedDate === d ? "bg-blue-600 text-white" : "bg-white"
-                }`}
+                className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${selectedDate === d
+                    ? "bg-blue-600 text-white border-blue-600 shadow"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-blue-500"
+                  }`}
               >
-                {new Date(d).toLocaleDateString("en-IN", {
-                  weekday: "short",
-                  day: "2-digit",
-                  month: "short",
-                })}
+                {getDateLabel(d)}
               </button>
             ))}
           </div>
@@ -167,7 +189,7 @@ const MovieShows = () => {
         {/* THEATRE */}
         {availableTheatres.length > 0 && (
           <div>
-            <h2 className="text-xl  mb-3 text-blue-700">Theatre</h2>
+            <h2 className="text-blue-700 font-semibold text-lg mb-3">Theater</h2>
             <div className="flex flex-wrap gap-3">
               {availableTheatres.map((t) => (
                 <button
@@ -176,13 +198,12 @@ const MovieShows = () => {
                     setSelectedTheatre(t);
                     setSelectedShow(null);
                   }}
-                  className={`px-4 py-2 rounded-lg border ${
-                    selectedTheatre?.theatreId === t.theatreId
+                  className={`px-3 py-2 rounded-lg border ${selectedTheatre?.theatreId === t.theatreId
                       ? "bg-blue-600 text-white"
-                      : "bg-white"
-                  }`}
+                      : "bg-white hover:bg-blue-50"
+                    }`}
                 >
-                 {t.theatreName}
+                  {t.theatreName}
                 </button>
               ))}
             </div>
@@ -192,17 +213,16 @@ const MovieShows = () => {
         {/* TIME */}
         {timesByTheatre.length > 0 && (
           <div>
-            <h2 className="text-xl  mb-3 text-blue-700">Time</h2>
+            <h2 className="text-blue-700 font-semibold text-lg mb-3">Time</h2>
             <div className="flex flex-wrap gap-3">
               {timesByTheatre.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => setSelectedShow(s)}
-                  className={`px-4 py-2 rounded-lg border ${
-                    selectedShow?.id === s.id
+                  className={`px-3 py-2 rounded-lg border ${selectedShow?.id === s.id
                       ? "bg-blue-600 text-white"
-                      : "bg-white"
-                  }`}
+                      : "bg-white hover:bg-blue-50"
+                    }`}
                 >
                   {new Date(s.startTime).toLocaleTimeString("en-IN", {
                     hour: "2-digit",
@@ -215,26 +235,21 @@ const MovieShows = () => {
         )}
       </div>
 
-      {/* RIGHT SECTION (same as your old UI) */}
-      <div className="w-[360px] space-y-6  bg-white rounded-xl p-6 shadow-lg">
-
+      {/* RIGHT */}
+      <div className="w-[340px] h-[500px] bg-white rounded-2xl shadow-lg p-6 space-y-5">
         {movie && (
           <>
-            <img src={movie.image} alt={movie.name} className="rounded-xl w-full h-auto object-cover" />
-            <h2 className="text-blue-700 font-bold text-lg">{movie.name}</h2>
-            <p className="text-gray-600 text-sm">{movie.description}</p>
-          </>
+            <img src={movie.image} alt={movie.name} className="rounded-xl w-full h-[220px] object-cover" />
+            <h2 className="text-blue-700 font-bold text-lg">{movie.name}</h2> <p>Dscription: {movie.description || "2h 30m"}</p> <div className="text-gray-600 font-bold text-sm space-y-1"> <p>Duration: {movie.duration || "2h 30m"}</p> <p>Rating: {movie.rating || "9/10"}</p> <p>Genre: {movie.genre || "Action"}</p> </div> </>
         )}
 
         {selectedDate && selectedTheatre && selectedShow && (
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <h3 className="text-blue-600 font-bold text-lg">{selectedTheatre.theatreName}</h3>
-            <p>{new Date(selectedShow.startTime).toLocaleDateString("en-IN")}</p>
-            <p>{new Date(selectedShow.startTime).toLocaleTimeString("en-IN")}</p>
-
+          <div className="border border-blue-500 rounded-xl p-4 space-y-2 mt-20">
+            <h3 className="text-blue-600 font-semibold">{selectedTheatre.theatreName}</h3>
+            <p>{new Date(selectedShow.startTime).toLocaleString("en-IN")}</p>
             <button
               onClick={() => navigate(`/seat-booking/${selectedShow.id}`)}
-              className="w-full mt-4 border border-blue-600 text-blue-600 py-2 rounded-lg hover:bg-blue-600 hover:text-white"
+              className="w-full mt-2 bg-blue-600 text-white py-2 rounded-lg"
             >
               Book Now
             </button>

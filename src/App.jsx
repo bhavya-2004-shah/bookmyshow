@@ -15,6 +15,7 @@ import ConfirmationSuccess from './pages/ConfirmationSuccess';
 import ConfirmationFailed from './pages/ConfirmationFailed';
 import Tickets from './pages/Tickets';
 import MyTickets from './pages/MyTickets';
+import NotFound from './pages/NotFound';
 
 const App = () => {
   return (
@@ -51,6 +52,7 @@ const App = () => {
         {/* Routes WITHOUT Navbar */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="*" element={<NotFound />} />
 
       </Routes>
     
