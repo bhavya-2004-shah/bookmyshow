@@ -67,16 +67,16 @@ const MovieShows = () => {
           const screen = screens[i];
           const showTimes = res.data.data.screen.showTimes || [];
 
-          showTimes
-            .filter((s) => s.movieId === movieId)
-            .forEach((s) => {
-              allShows.push({
-                ...s,
-                theatreId: screen.theatreId,
-                theatreName: screen.theatreName,
-                screenNumber: res.data.data.screen.screenNumber,
-              });
-            });
+        showTimes
+  .filter((s) => String(s.movieId) === String(movieId))
+  .forEach((s) => {
+    allShows.push({
+      ...s,
+      theatreId: screen.theatreId,
+      theatreName: screen.theatreName,
+      screenNumber: res.data.data.screen.screenNumber,
+    });
+  });
         });
 
         setShows(allShows);
