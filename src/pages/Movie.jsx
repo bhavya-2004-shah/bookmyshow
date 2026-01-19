@@ -42,7 +42,7 @@ const Movie = () => {
   }, [token]);
 
   return (
-    <div>
+    <div  className="px-50 bg-gradient-to-br from-blue-200 via-white to-blue-200">
       <div className="px-8 pt-6">
         <h1 className="text-2xl font-semibold text-blue-600">Now Showing</h1>
       </div>
@@ -56,7 +56,7 @@ const Movie = () => {
         </Link>
       </div>
 
-      <div className="px-8 mt-8 flex flex-wrap gap-18">
+      <div className="px-20 mt-8 flex flex-wrap gap-18">
         {movieNames.map((movie) => (
           <MovieCard key={movie.id} id={movie.id} image={movie.image} name={movie.name} />
         ))}

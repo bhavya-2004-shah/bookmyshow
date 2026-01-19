@@ -56,53 +56,62 @@ const SeatSelection = () => {
     }
   };
 
- 
   const handleSeatClick = (seatId, layoutType) => {
-  if (bookedSeats.includes(seatId)) return;
+    if (bookedSeats.includes(seatId)) return;
 
-  const row = seatId[0];
-  const startNumber = parseInt(seatId.slice(1));
+    const row = seatId[0];
+    const startNumber = parseInt(seatId.slice(1));
 
-  let autoSelected = [];
+    let autoSelected = [];
 
-  for (let i = 0; i < maxSeats; i++) {
-    const nextSeat = `${row}${startNumber + i}`;
+    for (let i = 0; i < maxSeats; i++) {
+      const nextSeat = `${row}${startNumber + i}`;
+      if (bookedSeats.includes(nextSeat)) break;
+      autoSelected.push({ seat: nextSeat, layoutType });
+    }
 
-    // ⛔ STOP if the seat is already booked
-    if (bookedSeats.includes(nextSeat)) break;
+    setSelectedSeats(autoSelected);
 
-    autoSelected.push({ seat: nextSeat, layoutType });
-  }
+    const total = autoSelected.reduce(
+      (sum, s) => sum + (priceMap[s.layoutType] || 0),
+      0
+    );
 
-  setSelectedSeats(autoSelected);
-
-  const total = autoSelected.reduce(
-    (sum, s) => sum + (priceMap[s.layoutType] || 0),
-    0
-  );
-
-  setTotalAmount(total);
-};
-
+    setTotalAmount(total);
+  };
 
   if (!layoutData.length)
     return <div className="text-center mt-10">Loading seats...</div>;
 
   return (
-    <div className="min-h-screen bg-blue-100 flex flex-col items-center px-20">
+    <div className="min-h-screen  bg-gradient-to-br from-blue-100 via-white to-blue-100 flex flex-col items-center px-10 py-6">
 
-      <div className="bg-blue-100 mt-10 p-8 rounded-2xl w-full">
+      {/* 🔹 Top Header */}
+      <div className="w-full flex mb-6">
+        <button
+          onClick={() => navigate(-1)}
+          className="text-blue-600 text-xl font-medium hover:underline"
+        >
+          ← Back
+        </button>
+        <h1 className="px-10 text-5xl font-bold text-blue-700">
+          Select Seat
+        </h1>
+      </div>
+
+      {/* 🔹 Seat Layout */}
+      <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-5xl">
         {layoutData.map((section, idx) => {
           const { type, layout } = section;
           const [start, end] = layout.columns;
 
           return (
-            <div key={idx} className="mb-12">
+            <div key={idx} className="mb-10">
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-sm font-semibold text-gray-700">
                   ₹{priceMap[type]} {type}
                 </span>
-                <div className="flex-1 border-t border-gray-400"></div>
+                <div className="flex-1 border-t border-gray-300"></div>
               </div>
 
               {layout.rows.map((row) => (
@@ -119,7 +128,7 @@ const SeatSelection = () => {
                         className={`w-9 h-7 flex items-center justify-center text-xs rounded border m-1
                           ${
                             isBooked
-                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                               : isSelected
                               ? "bg-blue-600 text-white border-blue-600"
                               : "bg-white hover:border-blue-500 cursor-pointer"
@@ -135,14 +144,16 @@ const SeatSelection = () => {
           );
         })}
 
-        <div className="mt-6">
-          <div className="h-2 bg-gray-400 rounded-full"></div>
-          <p className="text-center text-gray-600 text-sm mt-1">
+        {/* Screen Bar */}
+        <div className="mt-4">
+          <div className="h-2 bg-gray-300 rounded-full"></div>
+          <p className="text-center text-gray-500 text-sm mt-2">
             All eyes this way please!
           </p>
         </div>
       </div>
 
+      {/* 🔹 Pay Button */}
       <button
         className="mt-8 mb-12 px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold disabled:bg-gray-400"
         disabled={selectedSeats.length !== maxSeats}

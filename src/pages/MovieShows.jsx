@@ -69,7 +69,7 @@ const MovieShows = () => {
           const showTimes = res.data.data.screen.showTimes || [];
 
           showTimes
-            .filter((s) => String(s.movieId) === String(movieId)) // 🔥 FIXED
+            .filter((s) => String(s.movieId) === String(movieId))
             .forEach((s) => {
               allShows.push({
                 ...s,
@@ -99,7 +99,6 @@ const MovieShows = () => {
 
         setAvailableDates(filteredDates);
         setSelectedDate(filteredDates[0] || null);
-
       } catch (err) {
         console.error("Error loading movie shows:", err);
       }
@@ -108,7 +107,6 @@ const MovieShows = () => {
     fetchData();
   }, [movieId]);
 
-  // 🎬 SHOW ALL THEATRES FROM MOVIE API
   useEffect(() => {
     if (!movie) return;
 
@@ -150,9 +148,11 @@ const MovieShows = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-white to-blue-100 flex px-8 py-6 gap-10">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-100 flex px-60 py-6 gap-10">
 
+      {/* LEFT SIDE */}
       <div className="flex-1 space-y-10">
+
         <button onClick={() => navigate(-1)} className="text-gray-400 hover:text-sky-600">
           ← Back
         </button>
@@ -200,9 +200,14 @@ const MovieShows = () => {
           </div>
         )}
 
-        {timesByTheatre.length > 0 && (
-          <div>
-            <h2 className="text-blue-700 font-semibold text-lg mb-3">Time</h2>
+        <div>
+          <h2 className="text-blue-700 font-semibold text-lg mb-3">Time</h2>
+
+          {timesByTheatre.length === 0 ? (
+            <p className="text-gray-400 text-sm">
+              No showtimes available for this theatre on selected date.
+            </p>
+          ) : (
             <div className="flex flex-wrap gap-3">
               {timesByTheatre.map((s) => (
                 <button
@@ -221,27 +226,41 @@ const MovieShows = () => {
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <div className="w-[340px] h-[500px] bg-white rounded-2xl shadow-lg p-6 space-y-5">
+      {/* RIGHT PANEL */}
+      <div className="w-[340px] h-[500px] bg-white rounded-2xl shadow-lg p-6 space-y-4">
+
         {movie && (
           <>
-            <img src={movie.image} alt={movie.name} className="rounded-xl w-full h-[220px] object-cover" />
+            <img src={movie.image} alt={movie.name} className="rounded-xl w-full h-[200px] object-cover" />
             <h2 className="text-blue-700 font-bold text-lg">{movie.name}</h2>
+
+            {/* 🔹 MOVIE DETAILS IN DIFFERENT LINES */}
+            <div className="text-sm text-gray-600 space-y-1 font-medium">
+              <p>Duration: {movie.duration} mins</p>
+              <p>Language: {movie.languages?.join(", ")}</p>
+              <p>Action: {movie.category?.join(", ")}</p>
+            </div>
+
+            <p className="text-sm text-gray-500 mt-2">{movie.description}</p>
           </>
         )}
 
         {selectedDate && selectedTheatre && selectedShow && (
-          <div className="border border-blue-500 rounded-xl p-4 space-y-2 mt-20">
+          <div className="mt-25 border border-blue-500 rounded-xl p-4 space-y-2 mt-6">
             <h3 className="text-blue-600 font-semibold">{selectedTheatre.theatreName}</h3>
-            <p>{new Date(selectedShow.startTime).toLocaleString("en-IN")}</p>
+            <p className="text-xs text-gray-500">
+              {new Date(selectedShow.startTime).toLocaleString("en-IN")}
+            </p>
+
             <button
               onClick={() => navigate(`/seat-booking/${selectedShow.id}`)}
-              className="w-full mt-2 bg-blue-600 text-white py-2 rounded-lg"
+              className="w-full mt-3 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
             >
-              Book Now
+              Book Now 
             </button>
           </div>
         )}

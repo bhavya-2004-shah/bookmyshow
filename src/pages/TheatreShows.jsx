@@ -101,11 +101,11 @@ const TheatreShows = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-sky-100 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-100 p-6">
 
       {/* 🎭 Theatre Header */}
       {theater && (
-        <div className="mb-6">
+        <div className="mb-6 px-50">
           <button
             onClick={() => navigate(-1)}
             className="text-gray-500 hover:text-blue-600 mb-2"
@@ -119,7 +119,7 @@ const TheatreShows = () => {
       )}
 
       {/* 📅 Date Selector */}
-      <div className="flex gap-3 overflow-x-auto pb-2 mb-8 scrollbar-hide">
+      <div className="flex gap-3 px-50 overflow-x-auto pb-2 mb-8 scrollbar-hide">
         {allDates.map((date) => {
           const fullDate = new Date(
             new Date().getFullYear(),
@@ -161,7 +161,8 @@ const TheatreShows = () => {
         if (filteredShows.length === 0) return null;
 
         return (
-          <div
+          <div className="px-50">
+            <div
             key={movie.movieId}
             className="bg-white rounded-xl p-5 mb-6 shadow flex justify-between items-center"
           >
@@ -197,6 +198,7 @@ const TheatreShows = () => {
               Book Now
             </button>
           </div>
+ </div>          
         );
       })}
     </div>

@@ -15,7 +15,7 @@ const SeatBooking = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50  bg-gradient-to-br from-blue-100 via-white to-blue-100">
       <div className="bg-white rounded-2xl shadow-md p-8 w-[380px] text-center space-y-6">
 
         <h2 className="text-2xl font-semibold text-blue-600">
