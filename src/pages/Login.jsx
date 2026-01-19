@@ -52,10 +52,10 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="w-[95%] h-[90vh] border-2 border-blue-500 flex">
+      <div className="w-[100%] h-[100vh] border-2 border-blue-500 flex">
 
         <div className="w-1/2 bg-gradient-to-b from-blue-200 to-blue-50 p-10 flex flex-col justify-between">
-          <img src={logo} alt="Logo" className="w-20 h-20" />
+          <img src={logo} alt="Logo" className="w-30 h-10" />
           <div className="text-gray-700 italic text-3xl leading-10">
             Welcome.
             <br />
