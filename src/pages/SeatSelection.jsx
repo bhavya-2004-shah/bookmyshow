@@ -4,6 +4,14 @@ import axios from "axios";
 
 const BASE_URL = "/api";
 
+const safeParseLayout = (layout) => {
+  try {
+    return JSON.parse(layout) || [];
+  } catch {
+    return [];
+  }
+};
+
 const SeatSelection = () => {
   const { showTimeId, seats } = useParams();
   const navigate = useNavigate();
@@ -29,7 +37,7 @@ const SeatSelection = () => {
 
       const showTime = res.data.data;
 
-      const parsedLayout = JSON.parse(showTime.screen.layout);
+      const parsedLayout = safeParseLayout(showTime.screen.layout);
       setLayoutData(parsedLayout);
 
       const prices = {};
@@ -48,40 +56,42 @@ const SeatSelection = () => {
     }
   };
 
+ 
   const handleSeatClick = (seatId, layoutType) => {
-    if (bookedSeats.includes(seatId)) return;
+  if (bookedSeats.includes(seatId)) return;
 
-    let autoSelected = [];
+  const row = seatId[0];
+  const startNumber = parseInt(seatId.slice(1));
 
-    const row = seatId[0];
-    const startNumber = parseInt(seatId.slice(1));
+  let autoSelected = [];
 
-    for (let i = 0; i < maxSeats; i++) {
-      const nextSeat = `${row}${startNumber + i}`;
-      if (!bookedSeats.includes(nextSeat)) {
-        autoSelected.push({ seat: nextSeat, layoutType });
-      }
-    }
+  for (let i = 0; i < maxSeats; i++) {
+    const nextSeat = `${row}${startNumber + i}`;
 
-    autoSelected = autoSelected.slice(0, maxSeats);
+    // ⛔ STOP if the seat is already booked
+    if (bookedSeats.includes(nextSeat)) break;
 
-    setSelectedSeats(autoSelected);
+    autoSelected.push({ seat: nextSeat, layoutType });
+  }
 
-    const total = autoSelected.reduce(
-      (sum, s) => sum + (priceMap[s.layoutType] || 0),
-      0
-    );
+  setSelectedSeats(autoSelected);
 
-    setTotalAmount(total);
-  };
+  const total = autoSelected.reduce(
+    (sum, s) => sum + (priceMap[s.layoutType] || 0),
+    0
+  );
 
-  if (!layoutData.length) return <div className="text-center mt-10">Loading seats...</div>;
+  setTotalAmount(total);
+};
+
+
+  if (!layoutData.length)
+    return <div className="text-center mt-10">Loading seats...</div>;
 
   return (
-    <div className="min-h-screen bg-blue-100 flex flex-col items-center px-70 ">
+    <div className="min-h-screen bg-blue-100 flex flex-col items-center px-20">
 
-      {/* SEAT MAP */}
-      <div className="bg-blue-100 mt-10 p-8 rounded-2xl  w-full ">
+      <div className="bg-blue-100 mt-10 p-8 rounded-2xl w-full">
         {layoutData.map((section, idx) => {
           const { type, layout } = section;
           const [start, end] = layout.columns;
@@ -106,10 +116,14 @@ const SeatSelection = () => {
                       <div
                         key={seatId}
                         onClick={() => handleSeatClick(seatId, type)}
-                        className={`w-9 h-7 flex items-center justify-center text-xs rounded border m-2 border-gray-300 cursor-pointer
-                          ${isBooked ? "bg-gray-300 text-gray-500 cursor-not-allowed" :
-                            isSelected ? "bg-blue-500 text-white border-blue-500" :
-                              "hover:border-blue-500"}`}
+                        className={`w-9 h-7 flex items-center justify-center text-xs rounded border m-1
+                          ${
+                            isBooked
+                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                              : isSelected
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "bg-white hover:border-blue-500 cursor-pointer"
+                          }`}
                       >
                         {seatId}
                       </div>
@@ -121,18 +135,17 @@ const SeatSelection = () => {
           );
         })}
 
-
         <div className="mt-6">
-          <div className="h-2 bg-gray-300 rounded-full"></div>
-          <p className="text-center text-gray-500 text-sm mt-1">
+          <div className="h-2 bg-gray-400 rounded-full"></div>
+          <p className="text-center text-gray-600 text-sm mt-1">
             All eyes this way please!
           </p>
         </div>
       </div>
 
-
       <button
-        className="mt-8 mb-12 px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold"
+        className="mt-8 mb-12 px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold disabled:bg-gray-400"
+        disabled={selectedSeats.length !== maxSeats}
         onClick={() =>
           navigate(`/confirmation/${showTimeId}`, {
             state: {
