@@ -35,9 +35,19 @@ const Login = () => {
 
       const { accessToken, expireAt } = res.data.data;
 
-      // Save token & expiry
+      const virtualFingerprint = btoa(
+        JSON.stringify({
+          length:accessToken.length,
+          issuedAt : Date.now(),
+        })
+      )
+   
+
       localStorage.setItem("token", accessToken);
       localStorage.setItem("expireAt", expireAt);
+      localStorage.setItem("isAuthenticated","true");
+      localStorage.setItem("authFingerprint", virtualFingerprint );
+      localStorage.setItem("loginTime" , Date.now());
 
       navigate("/movie");
 
